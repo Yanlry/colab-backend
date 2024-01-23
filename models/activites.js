@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const uid2 = require('uid2');
 
 const activitesSchema = mongoose.Schema({
   activite: String,

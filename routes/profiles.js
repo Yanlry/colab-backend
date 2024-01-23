@@ -13,7 +13,6 @@ router.post('/jeVeux', (req, res) => {
             if (!user) {
                 return res.json({ result: false, error: 'User not found' });
             }
-
             const activites = req.body.activites;
             const newActiviteIds = [];
             const promises = activites.map(activiteName => {
@@ -82,7 +81,6 @@ router.post('/jePeux', (req, res) => {
 router.post('/bio', (req, res) => {
     const token = req.body.token;
     const contenuBio = req.body.bio;
-
     User.findOneAndUpdate({ token: token }, { bio: contenuBio }, { new: true })
         .then(data => {
             if (!data) {
@@ -90,7 +88,6 @@ router.post('/bio', (req, res) => {
             }
             return res.json({ message: "Bio mis à jour avec succès", bio: data.bio });
         })
-
 });
 
 router.get('/activites', (req, res) => {
@@ -102,7 +99,17 @@ router.get('/activites', (req, res) => {
         })
 });
 
-
+router.post('/newActivite', (req, res) => {
+    const { activite } = req.body;
+    if (!activite) {
+        return res.json({ result: false, error: 'Le champ activite est requis' });
+    }
+    const nouvelleActivite = new Activite({ activite });
+    nouvelleActivite.save()
+        .then(activiteEnregistree => {
+            res.json({ result: true, activite: activiteEnregistree});
+        })
+});
 
 
 module.exports = router;

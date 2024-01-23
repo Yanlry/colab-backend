@@ -12,55 +12,41 @@ const User = require('../models/users');
 router.post('/propositions', (req, res) => {
   const { token, cible, initiateur } = req.body;
 
-
   User.findOne({ username: cible })
     .then(cible => {
       if (!cible) {
         return res.json({ result: false, error: 'Utilisateur cible non trouvé' });
       }
-
       User.findOne({ username: initiateur })
         .then(initiateur => {
           if (!initiateur) {
             return res.json({ result: false, error: 'Utilisateur initiateur non trouvé' });
           }
-
-
           Annonce.findOne({ token })
             .then(annonce => {
               if (!annonce) {
                 return res.json({ result: false, error: 'Annonce non trouvée' });
               }
-
               PropositionCollab.findOne({ annonce: annonce._id, initiateur: initiateur._id })
                 .then(existingProposition => {
                   if (existingProposition) {
                     return res.json({ result: false, message: 'Vous avez déjà fait une demande de collaboration pour cette annonce.' });
                   }
-
                   const proposition = new PropositionCollab({
                     annonce: annonce._id,
                     cible: cible._id,
                     initiateur: initiateur._id,
                     statut: 'en_attente'
                   });
-
                   proposition.save()
                     .then(savedProposition => {
                       res.json({ result: true, message: 'La demande de collaboration a été envoyée avec succès.', proposition: savedProposition });
                     })
-
                 })
-
             })
-
         })
-
     })
-
 });
-
-
 
 
 //route qui affiche les offre ainsi que l'état de la proposition de colab 
@@ -72,7 +58,6 @@ router.post('/propositions/cible', (req, res) => {
       if (!user) {
         return res.json({ result: false, error: 'Utilisateur non trouvé' });
       }
-
       PropositionCollab.find({ cible: user._id })
         .populate({
           path: 'annonce',
@@ -114,15 +99,11 @@ router.post('/propositions/cible', (req, res) => {
                 message = `Vous avez refusé la proposition de collaboration de: ${username}${additionalMessage}`;
               }
             }
-
             return { message };
           });
-
           res.json({ result: true, isCible: true, messages: messages });
         })
-
     })
-
 });
 
 
@@ -135,7 +116,6 @@ router.post('/propositions/initiateur/', (req, res) => {
       if (!user) {
         return res.json({ result: false, error: 'Utilisateur non trouvé' });
       }
-
       PropositionCollab.find({ initiateur: user._id })
         .populate({
           path: 'annonce',
@@ -177,10 +157,8 @@ router.post('/propositions/initiateur/', (req, res) => {
                 message = `L'utilisateur ${cibleUsername} a décliné votre proposition de collaboration${additionalMessage}`;
               }
             }
-
             return { message };
           });
-
           res.json({ result: true, isInitiateur: true, messages: messages });
         })
 
@@ -199,7 +177,6 @@ router.put('/propositions/accept', (req, res) => {
       if (!user) {
         return res.json({ result: false, error: 'Utilisateur non trouvé' });
       }
-
       PropositionCollab.findOneAndUpdate(
         { cible: user._id, statut: 'en_attente' },
         { statut: 'accepté' }
@@ -210,9 +187,7 @@ router.put('/propositions/accept', (req, res) => {
           }
           res.json({ result: false, error: 'Aucune proposition de collaboration en attente trouvée' });
         })
-
     })
-
 });
 
 router.put('/propositions/refuse', (req, res) => {
@@ -223,7 +198,6 @@ router.put('/propositions/refuse', (req, res) => {
       if (!user) {
         return res.json({ result: false, error: 'Utilisateur non trouvé' });
       }
-
       PropositionCollab.findOneAndUpdate(
         { cible: user._id, statut: 'en_attente' },
         { statut: 'refusé' }
@@ -234,9 +208,7 @@ router.put('/propositions/refuse', (req, res) => {
           }
           res.json({ result: false, error: 'Aucune proposition de collaboration en attente trouvée' });
         })
-
     })
-
 });
 
 router.post('/collaboration/contact', (req, res) => {
@@ -247,7 +219,6 @@ router.post('/collaboration/contact', (req, res) => {
       if (!user) {
         return res.json({ result: false, error: 'Utilisateur non trouvé' });
       }
-
       PropositionCollab.find({
         $or: [
           { $and: [{ initiateur: user._id }, { statut: 'accepté' }] },
@@ -292,12 +263,9 @@ router.post('/collaboration/contact', (req, res) => {
               });
             }
           });
-
           res.json({ result: true, contacts });
         })
-
     })
-
 });
 
 

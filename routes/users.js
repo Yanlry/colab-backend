@@ -8,9 +8,6 @@ const bcrypt = require('bcrypt');
 const uid2 = require('uid2');
 
 
-
-
-
 // Expression régulière pour valider l'e-mail
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 const phoneRegex = /^[0-9]{10}$/;
@@ -18,7 +15,7 @@ const phoneRegex = /^[0-9]{10}$/;
 //Route qui gère l'inscription
 router.post('/signup', (req, res) => {
 
-  if (!checkBody(req.body, ["username", "password", "email", "sexe", "phone"])) {
+  if (!checkBody(req.body, ["username", "password", "email", "phone"])) {
     res.json({ result: false, error: "Champs manquants ou vides" });
     return;
   }
@@ -44,13 +41,12 @@ router.post('/signup', (req, res) => {
               const newUser = new User({
                 username: req.body.username,
                 email: req.body.email,
-                sexe: req.body.sexe,
                 password: hashPassword,
                 token: uid2(32),
                 phone: req.body.phone,
               });
               newUser.save().then(newDoc => {
-                res.json({ result: true, token: newDoc.token, username: newDoc.username, sexe: newDoc.sexe, phone: newDoc.phone });
+                res.json({ result: true, token: newDoc.token, username: newDoc.username, phone: newDoc.phone });
               });
             }
           });
