@@ -86,7 +86,7 @@ router.post('/propositions/cible', (req, res) => {
                   additionalMessage = `, annonce en question: Vous avez supprimé l'annonce`;
                 }
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = `, voici son numéro de téléphone: ${phone} vous pourrez retrouver ses coordonnées dans l'onglet contact, annonce en question: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}`;
+                additionalMessage = ` a propos de l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a était ajouté la liste de contact,`;
               } else if (proposition.statut === 'refusé') {
                 additionalMessage = `, annonce en question: ${proposition.annonce ? proposition.annonce.title : `, annonce en question: Vous avez supprimé l'annonce`}`;
               }
@@ -94,7 +94,7 @@ router.post('/propositions/cible', (req, res) => {
               if (proposition.statut === 'en_attente') {
                 message = `Vous avez reçu une offre de collaboration de: ${username}${additionalMessage}`;
               } else if (proposition.statut === 'accepté') {
-                message = `Vous avez accepté la proposition de collaboration de: ${username}${additionalMessage}`;
+                message = `Bravo, vous pouvez maintenant collaborer avec ${username}${additionalMessage}`;
               } else if (proposition.statut === 'refusé') {
                 message = `Vous avez refusé la proposition de collaboration de: ${username}${additionalMessage}`;
               }
@@ -139,14 +139,14 @@ router.post('/propositions/initiateur/', (req, res) => {
 
               if (proposition.statut === 'en_attente') {
                 if (proposition.annonce) {
-                  additionalMessage = `, pour l'offre: ${proposition.annonce.title}, le statut de la demande de collaboration est: ${proposition.statut}`;
+                  additionalMessage = `, pour l'annonce: ${proposition.annonce.title}, le statut de la demande de collaboration est: ${proposition.statut}`;
                 } else {
                   additionalMessage = `, annonce en question: Annonce supprimé`;
                 }
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = `, pour l'offre: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}, Voici son numéro de téléphone pour commencer votre collaboration: ${ciblePhone}`;
+                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a était ajouté a la liste de contact`;
               } else if (proposition.statut === 'refusé') {
-                additionalMessage = `, pour l'offre: ${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}`;
+                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}`;
               }
 
               if (proposition.statut === 'en_attente') {
@@ -154,19 +154,15 @@ router.post('/propositions/initiateur/', (req, res) => {
               } else if (proposition.statut === 'accepté') {
                 message = `${cibleUsername} a accepté votre proposition de collaboration${additionalMessage}`;
               } else if (proposition.statut === 'refusé') {
-                message = `L'utilisateur ${cibleUsername} a décliné votre proposition de collaboration${additionalMessage}`;
+                message = `${cibleUsername} a décliné votre proposition de collaboration${additionalMessage}`;
               }
             }
             return { message };
           });
           res.json({ result: true, isInitiateur: true, messages: messages });
         })
-
     })
-
 });
-
-
 
 //Modification des statuts de la proposition de collab 
 router.put('/propositions/accept', (req, res) => {

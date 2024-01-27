@@ -113,14 +113,3 @@ router.post('/newActivite', (req, res) => {
 
 
 module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
