@@ -4,9 +4,7 @@ var router = express.Router();
 const Annonce = require('../models/annonces');
 const PropositionCollab = require('../models/propositionCollabs')
 const User = require('../models/users');
-
-
-
+const { checkBody } = require("../modules/checkBody");
 
 //route qui va permettre d ajouter proposition de colabs
 router.post('/propositions', (req, res) => {
@@ -262,6 +260,30 @@ router.post('/collaboration/contact', (req, res) => {
           res.json({ result: true, contacts });
         })
     })
+});
+
+
+
+router.delete('/collaboration/delete', (req, res) => {
+  if (!checkBody(req.body, ['propositionCollabsId'])) {
+    res.json({ result: false, error: 'Champs vides ou manquants' });
+    return;
+  }
+
+  const { propositionCollabsId } = req.body;
+
+  PropositionCollab.findByIdAndDelete(propositionCollabsId)
+    .then(deletedCollaboration => {
+      if (deletedCollaboration) {
+        res.json({ result: true, message: 'La collaboration a été supprimée avec succès' });
+      } else {
+        res.json({ result: false, error: 'Collaboration non trouvée' });
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      res.json({ result: false, error: 'Erreur lors de la suppression de la collaboration' });
+    });
 });
 
 
