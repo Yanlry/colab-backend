@@ -1,3 +1,4 @@
+// app.js
 require('dotenv').config();
 require('./models/connection');
 
@@ -10,6 +11,7 @@ var usersRouter = require('./routes/users');
 var annoncesRouter = require('./routes/annonces');
 let profilesRouter = require('./routes/profiles');
 let propositionCollab = require('./routes/propositionCollabs');
+let messagesRouter = require('./routes/messages');
 var app = express();
 const cors = require('cors');
 
@@ -23,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/users', usersRouter);
 app.use('/annonces', annoncesRouter);
 app.use('/profiles', profilesRouter);
-app.use('/propositionCollabs', propositionCollab)
+app.use('/propositionCollabs', propositionCollab);
+app.use('/messages', messagesRouter);
 
 module.exports = app;
