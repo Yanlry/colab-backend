@@ -39,12 +39,13 @@ router.get('/messages/conversation/:senderToken/:recipientToken', async (req, re
 });
 
 
-// Endpoint pour récupérer les messages envoyés par un utilisateur
 router.get('/messages/sent/:senderToken', async (req, res) => {
   try {
     const senderToken = req.params.senderToken;
+    console.log('Sender Token:', senderToken); // Ajoutez cette ligne pour le débogage
     
     const sentMessages = await Message.find({ senderToken });
+    console.log('Sent Messages:', sentMessages); // Ajoutez cette ligne pour le débogage
 
     res.status(200).json(sentMessages);
   } catch (error) {
@@ -52,6 +53,7 @@ router.get('/messages/sent/:senderToken', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 // Endpoint pour récupérer les messages reçus par un utilisateur
 router.get('/messages/received/:recipientToken', async (req, res) => {
