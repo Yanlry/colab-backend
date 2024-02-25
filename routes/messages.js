@@ -1,14 +1,15 @@
 const express = require('express');
-const router = express.Router();
+var router = express.Router();
+
 const Message = require('../models/messages');
-const User = require('../models/users')
+
 
 // Endpoint pour créer un nouveau message
 router.post('/', (req, res) => {
   const { text, senderToken, recipientToken } = req.body;
   console.log('Received message:', text, 'from sender:', senderToken, 'to recipient:', recipientToken);
 
-  const newMessage = new Message({ text, senderToken, recipientToken });
+  const newMessage = new Message({ text, senderToken, recipientToken});
 
   newMessage.save()
     .then(savedMessage => {
@@ -20,6 +21,45 @@ router.post('/', (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     });
 });
+
+router.get('/:destinataireToken/:senderToken', (req, res) => {
+  const { destinataireToken, senderToken } = req.params;
+
+  Message.find({
+    $or: [
+      { $and: [{ senderToken }, { recipientToken: destinataireToken }] },
+      { $and: [{ senderToken: destinataireToken }, { recipientToken: senderToken }] }
+    ]
+  })
+    .sort({ date: 'asc' })
+    .then(messages => {
+      res.json({ result: true, messages });
+    })
+    .catch(error => {
+      console.error('Erreur lors de la récupération des messages:', error);
+      res.json({ result: false, error: 'Erreur lors de la récupération des messages' });
+    });
+});
+
+// router.get('/messages/:destinataireToken/:senderToken', (req, res) => {
+//   const { destinataireToken, senderToken } = req.params;
+
+//   Message.find({
+//     $or: [
+//       { $and: [{ senderToken }, { recipientToken: destinataireToken }] },
+//       { $and: [{ senderToken: destinataireToken }, { recipientToken: senderToken }] }
+//     ]
+//   })
+//     .sort({ date: 'asc' })
+//     .then(messages => {
+//       res.json({ result: true, messages });
+//     })
+//     .catch(error => {
+//       console.error('Erreur lors de la récupération des messages:', error);
+//       res.json({ result: false, error: 'Erreur lors de la récupération des messages' });
+//     });
+// });
+
 
 
 // // Endpoint pour créer un nouveau message

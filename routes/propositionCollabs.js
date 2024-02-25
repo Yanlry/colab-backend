@@ -221,7 +221,7 @@ router.post('/collaboration/contact', (req, res) => {
       })
         .populate({
           path: 'initiateur cible',
-          select: 'username phone'
+          select: 'username phone token'
         })
         .select('initiateur cible')
         .then(collaborations => {
@@ -247,7 +247,8 @@ router.post('/collaboration/contact', (req, res) => {
 
                 contacts.push({
                   username: contactUser.username,
-                  phone: contactUser.phone
+                  phone: contactUser.phone,
+                  token: contactUser.token
                 });
               }
             } else if (!contactUser) {
