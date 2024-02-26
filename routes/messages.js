@@ -41,6 +41,26 @@ router.get('/:destinataireToken/:senderToken', (req, res) => {
     });
 });
 
+router.get('/conversations/:userToken', (req, res) => {
+  const { userToken } = req.params;
+
+  Conversation.find({
+    $or: [
+      { senderToken: userToken },
+      { recipientToken: userToken }
+    ]
+  })
+    .sort({ lastMessageDate: 'desc' }) // Assurez-vous que le champ pour la date du dernier message est correct
+    .then(conversations => {
+      res.json({ result: true, conversations });
+    })
+    .catch(error => {
+      console.error('Erreur lors de la récupération des conversations:', error);
+      res.json({ result: false, error: 'Erreur lors de la récupération des conversations' });
+    });
+});
+
+
 // router.get('/messages/:destinataireToken/:senderToken', (req, res) => {
 //   const { destinataireToken, senderToken } = req.params;
 
