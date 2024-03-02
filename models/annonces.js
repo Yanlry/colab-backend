@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-
-
 const annoncesSchema = mongoose.Schema({
   type: String,
   title: String,

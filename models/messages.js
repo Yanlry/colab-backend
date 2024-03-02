@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 
-const conversationSchema = new mongoose.Schema({
-  participants: [String],
-  lastMessage: String,
-});
-
 const messageSchema = new mongoose.Schema({
   text: String,
   senderToken: String,
   recipientToken: String,
+  conversationId: String,
+  participants: [String],
+  lastMessage: String, 
   date: { type: Date, default: Date.now },
-  conversation: conversationSchema,
 });
+
+// Ajouter un index sur 'conversationId' pour améliorer les performances
+messageSchema.index({ conversationId: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 
-module.exports = { Message };
+module.exports = Message;

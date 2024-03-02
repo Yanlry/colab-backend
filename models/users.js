@@ -10,7 +10,6 @@ const usersSchema = mongoose.Schema({
   bio: String,
   experience: String,
 
-
   jePeux: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
   jeVeux: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
 });
