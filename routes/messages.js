@@ -52,14 +52,13 @@ router.get('/:destinataireToken/:senderToken', (req, res) => {
 router.get('/conversations/:userToken', (req, res) => {
   const { userToken } = req.params;
 
-  // Rechercher toutes les conversations où l'utilisateur est le sender ou le recipient
   Message.find({
     $or: [
       { 'senderToken': userToken },
       { 'recipientToken': userToken }
     ]
   })
-    .sort({ date: 'desc' }) // Tri par date du dernier message (utilisation de 'date' au lieu de 'lastMessage')
+    .sort({ date: 'desc' }) 
     .then(conversations => {
       res.json({ result: true, conversations });
     })
