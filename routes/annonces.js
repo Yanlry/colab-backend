@@ -8,7 +8,6 @@ const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 
 
-
 // ROUTE GET : Affiche toutes les annonce de type Offre et filtre en fonction des demande de l'utilsiateur
 router.get('/offres/:token', (req, res) => {
     User.findOne({ token: req.params.token })
@@ -33,14 +32,12 @@ router.get('/offres/:token', (req, res) => {
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
-                        city: annonce.city,
                         username: annonce.username.username,
                         date: annonce.date,
                         token: annonce.token
                     }));
                     res.json({ result: true, annonces: formattedAnnonces });
                 })
-
         })
 });
 
@@ -70,7 +67,6 @@ router.get('/demandes/:token', (req, res) => {
                             disponibilite: annonce.disponibilite,
                             tempsMax: annonce.tempsMax,
                             experience: annonce.experience,
-                            city: annonce.city,
                             username: annonce.username.username,
                             date: annonce.date,
                             token: annonce.token
@@ -122,13 +118,14 @@ router.post('/publier/:token', (req, res) => {
             });
             return Promise.all(promises)
                 .then(() => {
-                    const { type, title, description, tempsMax, experience, disponibilite } = req.body;
+                    const { type, title, description, tempsMax, experience, disponibilite, ville } = req.body;
 
                     const newAnnonce = new Annonce({
                         username: user._id,
                         token: uid2(32),
                         type: type,
                         title: title,
+                        ville: ville ,
                         description: description,
                         tempsMax: tempsMax,
                         experience: experience,
