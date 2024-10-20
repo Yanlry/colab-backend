@@ -8,7 +8,7 @@ const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 
 
-// ROUTE GET : Affiche toutes les annonce de type Offre et filtre en fonction des demande de l'utilsiateur
+// ROUTE GET : Affiche toutes les annonces de type Offre et filtre en fonction des demandes de l'utilisateur
 router.get('/offres/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
@@ -17,11 +17,11 @@ router.get('/offres/:token', (req, res) => {
             }
             Annonce.find({
                 type: 'Offre',
-                username: { $ne: user._id },
-                secteurActivite: { $in: user.jeVeux }
+                username: { $ne: user._id }, 
+                secteurActivite: { $in: user.jeVeux } 
             })
                 .populate({ path: 'secteurActivite', select: 'activite' })
-                .populate('username', 'username')
+                .populate('username', 'username') 
                 .then(annonces => {
                     const formattedAnnonces = annonces.map(annonce => ({
                         type: annonce.type,
@@ -34,48 +34,65 @@ router.get('/offres/:token', (req, res) => {
                         experience: annonce.experience,
                         username: annonce.username.username,
                         date: annonce.date,
-                        token: annonce.token
+                        token: annonce.token,
+                        latitude: annonce.latitude, 
+                        longitude: annonce.longitude 
                     }));
                     res.json({ result: true, annonces: formattedAnnonces });
                 })
+                .catch(error => {
+                    res.json({ result: false, error: error.message });
+                });
         })
+        .catch(error => {
+            res.json({ result: false, error: error.message });
+        });
 });
 
 
-// ROUTE GET : Affiche toutes les annonce de type Demande et filtre en fonction des demande de l'utilsiateur
+
+// ROUTE GET : Affiche toutes les annonces de type Demande et filtre en fonction des demandes de l'utilisateur
 router.get('/demandes/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
+
             Annonce.find({
                 type: 'Demande',
-                username: { $ne: user._id },
-                secteurActivite: { $in: user.jePeux }
+                username: { $ne: user._id }, 
+                secteurActivite: { $in: user.jePeux } 
             })
                 .populate({ path: 'secteurActivite', select: 'activite' })
-                .populate('username', 'username')
+                .populate('username', 'username') 
                 .then(annonces => {
-                    const formattedAnnonces = annonces.map(annonce => {
-                        return {
-                            type: annonce.type,
-                            title: annonce.title,
-                            description: annonce.description,
-                            image: annonce.image,
-                            secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
-                            disponibilite: annonce.disponibilite,
-                            tempsMax: annonce.tempsMax,
-                            experience: annonce.experience,
-                            username: annonce.username.username,
-                            date: annonce.date,
-                            token: annonce.token
-                        };
-                    });
+                    const formattedAnnonces = annonces.map(annonce => ({
+                        type: annonce.type,
+                        title: annonce.title,
+                        description: annonce.description,
+                        image: annonce.image,
+                        secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
+                        disponibilite: annonce.disponibilite,
+                        tempsMax: annonce.tempsMax,
+                        experience: annonce.experience,
+                        username: annonce.username.username,
+                        date: annonce.date,
+                        token: annonce.token,
+                        latitude: annonce.latitude, 
+                        longitude: annonce.longitude 
+                    }));
                     res.json({ result: true, annonces: formattedAnnonces });
                 })
+                .catch(error => {
+                    res.json({ result: false, error: error.message });
+                });
         })
+        .catch(error => {
+            res.json({ result: false, error: error.message });
+        });
 });
+
 
 // ROUTE GET : Permet d'afficher toutes les annonces enregistrer en base données qui sont associer au token
 router.get('/mesAnnonces/:token', (req, res) => {
@@ -118,7 +135,7 @@ router.post('/publier/:token', (req, res) => {
             });
             return Promise.all(promises)
                 .then(() => {
-                    const { type, title, description, tempsMax, experience, disponibilite, ville } = req.body;
+                    const { type, title, description, tempsMax, experience, disponibilite, ville, latitude, longitude } = req.body;
 
                     const newAnnonce = new Annonce({
                         username: user._id,
@@ -132,6 +149,8 @@ router.post('/publier/:token', (req, res) => {
                         disponibilite: disponibilite,
                         secteurActivite: newActiviteIds,
                         date: new Date(),
+                        latitude: latitude, // Enregistrer la latitude
+                        longitude: longitude // Enregistrer la longitude
                     });
                     newAnnonce.save()
                         .then(newDoc => {

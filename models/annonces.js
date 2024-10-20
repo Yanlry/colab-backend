@@ -11,8 +11,9 @@ const annoncesSchema = mongoose.Schema({
   experience: Number,
   token: String,
   username: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
-  date: Date
-});
+  date: Date,
+  latitude: Number, 
+  longitude: Number 
 
 
 
