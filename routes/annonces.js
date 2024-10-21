@@ -9,16 +9,16 @@ const uid2 = require('uid2');
 
 
 // ROUTE GET : Affiche toutes les annonces de type Offre et filtre en fonction des demandes de l'utilisateur
-router.get('/offres/:token', (req, res) => {
+router.get('/enseigner/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
             Annonce.find({
-                type: 'Offre',
+                type: 'Enseigner',
                 username: { $ne: user._id }, 
-                secteurActivite: { $in: user.jeVeux } 
+                secteurActivite: { $in: user.learn } 
             })
                 .populate({ path: 'secteurActivite', select: 'activite' })
                 .populate('username', 'username') 
@@ -52,7 +52,7 @@ router.get('/offres/:token', (req, res) => {
 
 
 // ROUTE GET : Affiche toutes les annonces de type Demande et filtre en fonction des demandes de l'utilisateur
-router.get('/demandes/:token', (req, res) => {
+router.get('/apprendre/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
             if (!user) {
@@ -60,9 +60,9 @@ router.get('/demandes/:token', (req, res) => {
             }
 
             Annonce.find({
-                type: 'Demande',
+                type: 'Apprendre',
                 username: { $ne: user._id }, 
-                secteurActivite: { $in: user.jePeux } 
+                secteurActivite: { $in: user.teach } 
             })
                 .populate({ path: 'secteurActivite', select: 'activite' })
                 .populate('username', 'username') 

@@ -5,7 +5,7 @@ const Activite = require('../models/activites')
 const User = require('../models/users')
 
 
-router.post('/jeVeux', (req, res) => {
+router.post('/learn', (req, res) => {
     const token = req.body.token;
 
     User.findOne({ token })
@@ -25,14 +25,14 @@ router.post('/jeVeux', (req, res) => {
             });
             return Promise.all(promises)
                 .then(() => {
-                    user.jeVeux = newActiviteIds;
+                    user.learn = newActiviteIds;
                     return user.save();
                 })
                 .then(() => {
-                    return User.populate(user, { path: 'jeVeux', select: 'activite' });
+                    return User.populate(user, { path: 'learn', select: 'activite' });
                 })
                 .then(data => {
-                    const activites = data.jeVeux.map(item => item.activite);
+                    const activites = data.learn.map(item => item.activite);
                     res.json({ result: true, user: activites });
                 })
                 .catch(error => {
@@ -45,7 +45,7 @@ router.post('/jeVeux', (req, res) => {
 });
 
 
-router.post('/jePeux', (req, res) => {
+router.post('/teach', (req, res) => {
     const token = req.body.token;
     User.findOne({ token })
         .then(user => {
@@ -64,14 +64,14 @@ router.post('/jePeux', (req, res) => {
             });
             return Promise.all(promises)
                 .then(() => {
-                    user.jePeux = newActiviteIds;
+                    user.teach = newActiviteIds;
                     return user.save();
                 })
                 .then(() => {
-                    return User.populate(user, { path: 'jePeux', select: 'activite' });
+                    return User.populate(user, { path: 'teach', select: 'activite' });
                 })
                 .then(data => {
-                    const activites = data.jePeux.map(item => item.activite);
+                    const activites = data.teach.map(item => item.activite);
                     res.json({ result: true, user: activites });
                 })
         })

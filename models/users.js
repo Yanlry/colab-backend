@@ -10,8 +10,8 @@ const usersSchema = mongoose.Schema({
   bio: String,
   experience: String,
 
-  jePeux: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
-  jeVeux: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
+  teach: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
+  learn: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
 });
 
 
