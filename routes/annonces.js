@@ -115,7 +115,6 @@ router.get('/mesAnnonces/:token', (req, res) => {
         });
 })
 
-// ROUTE POST : Permet de publier une annnonce et l'associer au token de l'utlisateur
 router.post('/publier/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
@@ -123,6 +122,7 @@ router.post('/publier/:token', (req, res) => {
                 res.json({ result: false, error: 'Utilisateur introuvable' });
                 return;
             }
+
             const activites = req.body.secteurActivite;
             const newActiviteIds = [];
             const promises = activites.map(activiteName => {
@@ -133,6 +133,7 @@ router.post('/publier/:token', (req, res) => {
                         }
                     });
             });
+
             return Promise.all(promises)
                 .then(() => {
                     const { type, title, description, tempsMax, experience, disponibilite, ville, latitude, longitude } = req.body;
@@ -142,17 +143,18 @@ router.post('/publier/:token', (req, res) => {
                         token: uid2(32),
                         type: type,
                         title: title,
-                        ville: ville ,
+                        ville: ville,
                         description: description,
                         tempsMax: tempsMax,
                         experience: experience,
-                        disponibilite: disponibilite,
+                        disponibilite: disponibilite, // Ce champ est maintenant un tableau
                         secteurActivite: newActiviteIds,
                         date: new Date(),
                         latitude: latitude, // Enregistrer la latitude
                         longitude: longitude // Enregistrer la longitude
                     });
-                    newAnnonce.save()
+
+                    return newAnnonce.save()
                         .then(newDoc => {
                             res.json({ result: true, annonce: newDoc });
                         })
@@ -165,6 +167,7 @@ router.post('/publier/:token', (req, res) => {
                 });
         });
 });
+
 
 // ROUTE DELETE : Permet de supprimer une annonces de l'utilisateur de la DB
 router.delete('/supprime/:token', (req, res) => {
