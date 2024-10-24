@@ -199,6 +199,30 @@ router.delete('/supprime/:token', (req, res) => {
         })
 })
 
+router.get('/activites/:token', (req, res) => {
+    User.findOne({ token: req.params.token })
+        .populate('teach')
+        .populate('learn')
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
+            }
+
+            const selectedTeachActivities = user.teach.map(activite => activite.activite);
+            const selectedLearnActivities = user.learn.map(activite => activite.activite);
+
+            res.status(200).json({
+                result: true,
+                teach: selectedTeachActivities,
+                learn: selectedLearnActivities
+            });
+        })
+        .catch(error => {
+            res.status(500).json({ result: false, error: error.message });
+        });
+});
+
+
 module.exports = router;
 
 
