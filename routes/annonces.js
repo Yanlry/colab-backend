@@ -8,22 +8,34 @@ const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 
 
-// ROUTE GET : Affiche toutes les annonces de type Offre et filtre en fonction des demandes de l'utilisateur
+// ROUTE GET : Affiche toutes les annonces de type "Apprendre" pour l'utilisateur, filtrées par secteur d'activité
 router.get('/enseigner/:token', (req, res) => {
-    User.findOne({ token: req.params.token })
+    const { token } = req.params;
+
+    // Recherche de l'utilisateur par token
+    User.findOne({ token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
+
+            // Affiche les secteurs d'activité de l'utilisateur pour le débogage
+            console.log('Secteurs enseignés par l\'utilisateur:', user.teach);
+
+            // Recherche des annonces de type "Apprendre" qui ne sont pas de cet utilisateur et correspondent aux secteurs d'activité
             Annonce.find({
                 type: 'Enseigner',
-                username: { $ne: user._id }, 
-                secteurActivite: { $in: user.learn } 
+                username: { $ne: user._id }, // Vérifie que l'annonce n'appartient pas à l'utilisateur
+                secteurActivite: { $in: user.teach } // Filtre par secteurs d'activité
             })
-                .populate({ path: 'secteurActivite', select: 'activite' })
-                .populate('username', 'username') 
+                .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
+                .populate('username', 'username') // Récupère le nom d'utilisateur
                 .then(annonces => {
+                    console.log('Annonces trouvées pour l\'utilisateur:', annonces);
+
+                    // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
+                        id: annonce._id,
                         type: annonce.type,
                         title: annonce.title,
                         description: annonce.description,
@@ -32,42 +44,56 @@ router.get('/enseigner/:token', (req, res) => {
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
-                        username: annonce.username.username,
+                        username: annonce.username?.username, // Utilise ?. pour éviter une erreur si username est null
                         date: annonce.date,
                         token: annonce.token,
-                        latitude: annonce.latitude, 
-                        longitude: annonce.longitude 
+                        latitude: annonce.latitude,
+                        longitude: annonce.longitude
                     }));
+
                     res.json({ result: true, annonces: formattedAnnonces });
                 })
                 .catch(error => {
+                    console.error('Erreur lors de la recherche des annonces:', error.message);
                     res.json({ result: false, error: error.message });
                 });
         })
         .catch(error => {
+            console.error('Erreur lors de la recherche de l\'utilisateur:', error.message);
             res.json({ result: false, error: error.message });
         });
 });
 
 
 
-// ROUTE GET : Affiche toutes les annonces de type Demande et filtre en fonction des demandes de l'utilisateur
+// ROUTE GET : Affiche toutes les annonces de type "Apprendre" pour l'utilisateur, filtrées par secteur d'activité
 router.get('/apprendre/:token', (req, res) => {
-    User.findOne({ token: req.params.token })
+    const { token } = req.params;
+
+    // Recherche de l'utilisateur par token
+    User.findOne({ token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
+            // Affiche les secteurs d'activité de l'utilisateur pour le débogage
+            console.log('Secteurs enseignés par l\'utilisateur:', user.teach);
+
+            // Recherche des annonces de type "Apprendre" qui ne sont pas de cet utilisateur et correspondent aux secteurs d'activité
             Annonce.find({
                 type: 'Apprendre',
-                username: { $ne: user._id }, 
-                secteurActivite: { $in: user.teach } 
+                username: { $ne: user._id }, // Vérifie que l'annonce n'appartient pas à l'utilisateur
+                secteurActivite: { $in: user.teach } // Filtre par secteurs d'activité
             })
-                .populate({ path: 'secteurActivite', select: 'activite' })
-                .populate('username', 'username') 
+                .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
+                .populate('username', 'username') // Récupère le nom d'utilisateur
                 .then(annonces => {
+                    console.log('Annonces trouvées pour l\'utilisateur:', annonces);
+
+                    // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
+                        id: annonce._id,
                         type: annonce.type,
                         title: annonce.title,
                         description: annonce.description,
@@ -76,22 +102,26 @@ router.get('/apprendre/:token', (req, res) => {
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
-                        username: annonce.username.username,
+                        username: annonce.username?.username, // Utilise ?. pour éviter une erreur si username est null
                         date: annonce.date,
                         token: annonce.token,
-                        latitude: annonce.latitude, 
-                        longitude: annonce.longitude 
+                        latitude: annonce.latitude,
+                        longitude: annonce.longitude
                     }));
+
                     res.json({ result: true, annonces: formattedAnnonces });
                 })
                 .catch(error => {
+                    console.error('Erreur lors de la recherche des annonces:', error.message);
                     res.json({ result: false, error: error.message });
                 });
         })
         .catch(error => {
+            console.error('Erreur lors de la recherche de l\'utilisateur:', error.message);
             res.json({ result: false, error: error.message });
         });
 });
+
 
 
 // ROUTE GET : Permet d'afficher toutes les annonces enregistrer en base données qui sont associer au token
@@ -219,6 +249,33 @@ router.get('/activites/:token', (req, res) => {
         })
         .catch(error => {
             res.status(500).json({ result: false, error: error.message });
+        });
+});
+
+router.get('/annonces-localisation', (req, res) => {
+    Annonce.find({}, 'title description latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username')
+        .populate('username', 'username') // Peuple le champ `username` pour récupérer uniquement `username`
+        .populate('secteurActivite', 'activite') // Peuple `secteurActivite` pour récupérer `activite` dans chaque document de `activites`
+        .then(annonces => {
+            const formattedAnnonces = annonces.map(annonce => ({
+                token:annonce.token,
+                title: annonce.title,
+                description: annonce.description,
+                latitude: annonce.latitude,
+                longitude: annonce.longitude,
+                ville: annonce.ville,
+                type: annonce.type,
+                date: annonce.date,
+                secteurActivite: annonce.secteurActivite.map(activity => activity.activite), // Utilise `activite` pour obtenir les noms des activités
+                disponibilite: annonce.disponibilite,
+                tempsMax: annonce.tempsMax,
+                experience: annonce.experience,
+                username: annonce.username ? annonce.username.username : "Utilisateur inconnu"
+            }));
+            res.json({ result: true, annonces: formattedAnnonces });
+        })
+        .catch(error => {
+            res.json({ result: false, error: error.message });
         });
 });
 

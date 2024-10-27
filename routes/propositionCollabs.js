@@ -46,8 +46,7 @@ router.post('/propositions', (req, res) => {
     })
 });
 
-
-//route qui affiche les offre ainsi que l'état de la proposition de colab 
+/// Route qui affiche les offres ainsi que l'état de la proposition de collaboration 
 router.post('/propositions/cible', (req, res) => {
   const { token } = req.body;
 
@@ -65,8 +64,10 @@ router.post('/propositions/cible', (req, res) => {
           path: 'initiateur',
           select: 'username phone'
         })
-        .select('annonce initiateur statut')
+        .select('_id annonce initiateur statut') // Inclure l'ID ici
         .then(propositionsCible => {
+          console.log("Propositions Cible :", propositionsCible); // Log pour vérifier les données
+
           const messages = propositionsCible.map(proposition => {
             let message;
 
@@ -78,13 +79,11 @@ router.post('/propositions/cible', (req, res) => {
               let additionalMessage = '';
 
               if (proposition.statut === 'en_attente') {
-                if (proposition.annonce) {
-                  additionalMessage = `, annonce en question: ${proposition.annonce.title}`;
-                } else {
-                  additionalMessage = `, annonce en question: Vous avez supprimé l'annonce`;
-                }
+                additionalMessage = proposition.annonce 
+                  ? `, annonce en question: ${proposition.annonce.title}`
+                  : `, annonce en question: Vous avez supprimé l'annonce`;
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = ` a propos de l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a était ajouté la liste de contact,`;
+                additionalMessage = ` a propos de l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a été ajouté à la liste de contacts,`;
               } else if (proposition.statut === 'refusé') {
                 additionalMessage = `, annonce en question: ${proposition.annonce ? proposition.annonce.title : `, annonce en question: Vous avez supprimé l'annonce`}`;
               }
@@ -97,15 +96,20 @@ router.post('/propositions/cible', (req, res) => {
                 message = `Vous avez refusé la proposition de collaboration de: ${username}${additionalMessage}`;
               }
             }
-            return { message };
+
+            // Inclure l'ID et le statut pour le frontend
+            return { 
+              _id: proposition._id, // Inclure l'ID ici
+              message, 
+              statut: proposition.statut 
+            };
           });
           res.json({ result: true, isCible: true, messages: messages });
         })
     })
 });
 
-
-//route qui affiche les proposition ainsi que l'état de la proposition de colab 
+// Route qui affiche les propositions envoyées par l'utilisateur
 router.post('/propositions/initiateur/', (req, res) => {
   const { token } = req.body;
 
@@ -123,8 +127,10 @@ router.post('/propositions/initiateur/', (req, res) => {
           path: 'cible',
           select: 'username phone'
         })
-        .select('annonce cible  statut')
+        .select('_id annonce cible statut') // Inclure l'ID ici
         .then(propositionsInitiateur => {
+          console.log("Propositions Initiateur :", propositionsInitiateur); // Log pour vérifier les données
+
           const messages = propositionsInitiateur.map(proposition => {
             let message;
 
@@ -136,15 +142,13 @@ router.post('/propositions/initiateur/', (req, res) => {
               let additionalMessage = '';
 
               if (proposition.statut === 'en_attente') {
-                if (proposition.annonce) {
-                  additionalMessage = `, pour l'annonce: ${proposition.annonce.title}, le statut de la demande de collaboration est: ${proposition.statut}`;
-                } else {
-                  additionalMessage = `, annonce en question: Annonce supprimé`;
-                }
+                additionalMessage = proposition.annonce
+                  ? `, pour l'annonce: ${proposition.annonce.title}, le statut de la demande de collaboration est: ${proposition.statut}`
+                  : `, annonce en question: Annonce supprimée`;
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a était ajouté a la liste de contact`;
+                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a été ajouté à la liste de contacts.`;
               } else if (proposition.statut === 'refusé') {
-                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}`;
+                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}.`;
               }
 
               if (proposition.statut === 'en_attente') {
@@ -155,12 +159,22 @@ router.post('/propositions/initiateur/', (req, res) => {
                 message = `${cibleUsername} a décliné votre proposition de collaboration${additionalMessage}`;
               }
             }
-            return { message };
+
+            // Inclure l'ID et le statut pour le frontend
+            return {
+              _id: proposition._id, // Inclure l'ID ici
+              message,
+              statut: proposition.statut
+            };
           });
           res.json({ result: true, isInitiateur: true, messages: messages });
         })
     })
+    .catch(error => {
+      res.json({ result: false, error: error.message });
+    });
 });
+
 
 //Modification des statuts de la proposition de collab 
 router.put('/propositions/accept', (req, res) => {
