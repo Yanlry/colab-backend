@@ -7,8 +7,6 @@ const Activite = require('../models/activites');
 const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 
-
-// ROUTE GET : Affiche toutes les annonces de type "Apprendre" pour l'utilisateur, filtrées par secteur d'activité
 router.get('/enseigner/:token', (req, res) => {
     const { token } = req.params;
 
@@ -19,17 +17,14 @@ router.get('/enseigner/:token', (req, res) => {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
-            // Affiche les secteurs d'activité de l'utilisateur pour le débogage
-            console.log('Secteurs enseignés par l\'utilisateur:', user.teach);
-
-            // Recherche des annonces de type "Apprendre" qui ne sont pas de cet utilisateur et correspondent aux secteurs d'activité
+            // Recherche des annonces de type "Enseigner" qui ne sont pas de cet utilisateur et qui correspondent aux secteurs d'activité de l'utilisateur
             Annonce.find({
-                type: 'Enseigner',
-                username: { $ne: user._id }, // Vérifie que l'annonce n'appartient pas à l'utilisateur
-                secteurActivite: { $in: user.teach } // Filtre par secteurs d'activité
+                type: 'Apprendre', // Filtre sur les annonces de type "Enseigner"
+                username: { $ne: user._id }, // Exclure les annonces de l'utilisateur lui-même
+                secteurActivite: { $in: user.teach } // Filtrer par secteurs d'activité que l'utilisateur souhaite apprendre
             })
                 .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
-                .populate('username', 'username') // Récupère le nom d'utilisateur
+                .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
                 .then(annonces => {
                     console.log('Annonces trouvées pour l\'utilisateur:', annonces);
 
@@ -66,7 +61,6 @@ router.get('/enseigner/:token', (req, res) => {
 
 
 
-// ROUTE GET : Affiche toutes les annonces de type "Apprendre" pour l'utilisateur, filtrées par secteur d'activité
 router.get('/apprendre/:token', (req, res) => {
     const { token } = req.params;
 
@@ -77,17 +71,14 @@ router.get('/apprendre/:token', (req, res) => {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
-            // Affiche les secteurs d'activité de l'utilisateur pour le débogage
-            console.log('Secteurs enseignés par l\'utilisateur:', user.teach);
-
-            // Recherche des annonces de type "Apprendre" qui ne sont pas de cet utilisateur et correspondent aux secteurs d'activité
+            // Recherche des annonces de type "Enseigner" qui ne sont pas de cet utilisateur et qui correspondent aux secteurs d'activité de l'utilisateur
             Annonce.find({
-                type: 'Apprendre',
-                username: { $ne: user._id }, // Vérifie que l'annonce n'appartient pas à l'utilisateur
-                secteurActivite: { $in: user.teach } // Filtre par secteurs d'activité
+                type: 'Enseigner', // Filtre sur les annonces de type "Enseigner"
+                username: { $ne: user._id }, // Exclure les annonces de l'utilisateur lui-même
+                secteurActivite: { $in: user.learn } // Filtrer par secteurs d'activité que l'utilisateur souhaite apprendre
             })
                 .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
-                .populate('username', 'username') // Récupère le nom d'utilisateur
+                .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
                 .then(annonces => {
                     console.log('Annonces trouvées pour l\'utilisateur:', annonces);
 
