@@ -5,6 +5,7 @@ const annoncesSchema = mongoose.Schema({
   title: String,
   ville: String,
   description: String,
+  programme: String,
   secteurActivite: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activites' }],
   disponibilite: [String],
   tempsMax: String,

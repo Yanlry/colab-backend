@@ -8,6 +8,7 @@ const messageSchema = new mongoose.Schema({
   participants: [String],
   lastMessage: String, 
   date: { type: Date, default: Date.now },
+  isRead: { type: Boolean, default: false }
 });
 
 // Ajouter un index sur 'conversationId' pour améliorer les performances

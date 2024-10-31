@@ -26,7 +26,6 @@ router.get('/enseigner/:token', (req, res) => {
                 .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
                 .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
                 .then(annonces => {
-                    console.log('Annonces trouvées pour l\'utilisateur:', annonces);
 
                     // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
@@ -34,6 +33,7 @@ router.get('/enseigner/:token', (req, res) => {
                         type: annonce.type,
                         title: annonce.title,
                         description: annonce.description,
+                        programme:annonce.programme,
                         image: annonce.image,
                         secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
                         disponibilite: annonce.disponibilite,
@@ -58,8 +58,6 @@ router.get('/enseigner/:token', (req, res) => {
             res.json({ result: false, error: error.message });
         });
 });
-
-
 
 router.get('/apprendre/:token', (req, res) => {
     const { token } = req.params;
@@ -80,7 +78,6 @@ router.get('/apprendre/:token', (req, res) => {
                 .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
                 .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
                 .then(annonces => {
-                    console.log('Annonces trouvées pour l\'utilisateur:', annonces);
 
                     // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
@@ -88,6 +85,7 @@ router.get('/apprendre/:token', (req, res) => {
                         type: annonce.type,
                         title: annonce.title,
                         description: annonce.description,
+                        programme: annonce.programme,
                         image: annonce.image,
                         secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
                         disponibilite: annonce.disponibilite,
@@ -113,9 +111,6 @@ router.get('/apprendre/:token', (req, res) => {
         });
 });
 
-
-
-// ROUTE GET : Permet d'afficher toutes les annonces enregistrer en base données qui sont associer au token
 router.get('/mesAnnonces/:token', (req, res) => {
     User.findOne({ token: req.params.token })
         .then(user => {
@@ -157,7 +152,7 @@ router.post('/publier/:token', (req, res) => {
 
             return Promise.all(promises)
                 .then(() => {
-                    const { type, title, description, tempsMax, experience, disponibilite, ville, latitude, longitude } = req.body;
+                    const { type, title, description, programme, tempsMax, experience, disponibilite, ville, latitude, longitude } = req.body;
 
                     const newAnnonce = new Annonce({
                         username: user._id,
@@ -166,6 +161,7 @@ router.post('/publier/:token', (req, res) => {
                         title: title,
                         ville: ville,
                         description: description,
+                        programme: programme,
                         tempsMax: tempsMax,
                         experience: experience,
                         disponibilite: disponibilite, // Ce champ est maintenant un tableau
@@ -189,8 +185,34 @@ router.post('/publier/:token', (req, res) => {
         });
 });
 
+router.get('/annonces-localisation', (req, res) => {
+    Annonce.find({}, 'title description programme latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username')
+        .populate('username', 'username') // Peuple le champ `username` pour récupérer uniquement `username`
+        .populate('secteurActivite', 'activite') // Peuple `secteurActivite` pour récupérer `activite` dans chaque document de `activites`
+        .then(annonces => {
+            const formattedAnnonces = annonces.map(annonce => ({
+                token:annonce.token,
+                title: annonce.title,
+                description: annonce.description,
+                programme: annonce.programme,
+                latitude: annonce.latitude,
+                longitude: annonce.longitude,
+                ville: annonce.ville,
+                type: annonce.type,
+                date: annonce.date,
+                secteurActivite: annonce.secteurActivite.map(activity => activity.activite), // Utilise `activite` pour obtenir les noms des activités
+                disponibilite: annonce.disponibilite,
+                tempsMax: annonce.tempsMax,
+                experience: annonce.experience,
+                username: annonce.username ? annonce.username.username : "Utilisateur inconnu"
+            }));
+            res.json({ result: true, annonces: formattedAnnonces });
+        })
+        .catch(error => {
+            res.json({ result: false, error: error.message });
+        });
+});
 
-// ROUTE DELETE : Permet de supprimer une annonces de l'utilisateur de la DB
 router.delete('/supprime/:token', (req, res) => {
     if (!checkBody(req.body, ['annonceId'])) {
         res.json({ result: false, error: 'Champs vides ou manquants' });
@@ -219,56 +241,6 @@ router.delete('/supprime/:token', (req, res) => {
                 })
         })
 })
-
-router.get('/activites/:token', (req, res) => {
-    User.findOne({ token: req.params.token })
-        .populate('teach')
-        .populate('learn')
-        .then(user => {
-            if (!user) {
-                return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
-            }
-
-            const selectedTeachActivities = user.teach.map(activite => activite.activite);
-            const selectedLearnActivities = user.learn.map(activite => activite.activite);
-
-            res.status(200).json({
-                result: true,
-                teach: selectedTeachActivities,
-                learn: selectedLearnActivities
-            });
-        })
-        .catch(error => {
-            res.status(500).json({ result: false, error: error.message });
-        });
-});
-
-router.get('/annonces-localisation', (req, res) => {
-    Annonce.find({}, 'title description latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username')
-        .populate('username', 'username') // Peuple le champ `username` pour récupérer uniquement `username`
-        .populate('secteurActivite', 'activite') // Peuple `secteurActivite` pour récupérer `activite` dans chaque document de `activites`
-        .then(annonces => {
-            const formattedAnnonces = annonces.map(annonce => ({
-                token:annonce.token,
-                title: annonce.title,
-                description: annonce.description,
-                latitude: annonce.latitude,
-                longitude: annonce.longitude,
-                ville: annonce.ville,
-                type: annonce.type,
-                date: annonce.date,
-                secteurActivite: annonce.secteurActivite.map(activity => activity.activite), // Utilise `activite` pour obtenir les noms des activités
-                disponibilite: annonce.disponibilite,
-                tempsMax: annonce.tempsMax,
-                experience: annonce.experience,
-                username: annonce.username ? annonce.username.username : "Utilisateur inconnu"
-            }));
-            res.json({ result: true, annonces: formattedAnnonces });
-        })
-        .catch(error => {
-            res.json({ result: false, error: error.message });
-        });
-});
 
 
 module.exports = router;

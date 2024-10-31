@@ -175,7 +175,6 @@ router.post('/propositions/initiateur/', (req, res) => {
     });
 });
 
-
 //Modification des statuts de la proposition de collab 
 router.put('/propositions/accept', (req, res) => {
   const { token } = req.body;
@@ -276,8 +275,6 @@ router.post('/collaboration/contact', (req, res) => {
         })
     })
 });
-
-
 
 router.delete('/collaboration/delete', (req, res) => {
   if (!checkBody(req.body, ['propositionCollabsId'])) {

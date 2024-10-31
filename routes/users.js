@@ -7,12 +7,36 @@ const { checkBody } = require("../modules/checkBody");
 const bcrypt = require('bcrypt');
 const uid2 = require('uid2');
 
-
-// Expression régulière pour valider l'e-mail
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 const phoneRegex = /^[0-9]{10}$/;
 
-//Route qui gère l'inscription
+
+router.get('/profile/:token', (req, res) => {
+  const { token } = req.params;
+
+  // Rechercher l'utilisateur par son token
+  User.findOne({ token })
+    .then(user => {
+      if (!user) {
+        res.json({ result: false, error: 'Utilisateur non trouvé' });
+      } else {
+        // Renvoie les informations de profil
+        res.json({
+          result: true,
+          profile: {
+            username: user.username,
+            phone: user.phone,
+            bio: user.bio || '', // Assurez-vous que l'utilisateur a un champ bio dans le modèle
+          }
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Erreur lors de la récupération du profil:', error);
+      res.json({ result: false, error: 'Erreur lors de la récupération du profil' });
+    });
+});
+
 router.post('/signup', (req, res) => {
 
   if (!checkBody(req.body, ["username", "password", "email", "phone"])) {
@@ -54,35 +78,6 @@ router.post('/signup', (req, res) => {
     });
 });
 
-// Route pour récupérer les informations de profil d'un utilisateur
-router.get('/profile/:token', (req, res) => {
-  const { token } = req.params;
-
-  // Rechercher l'utilisateur par son token
-  User.findOne({ token })
-    .then(user => {
-      if (!user) {
-        res.json({ result: false, error: 'Utilisateur non trouvé' });
-      } else {
-        // Renvoie les informations de profil
-        res.json({
-          result: true,
-          profile: {
-            username: user.username,
-            phone: user.phone,
-            bio: user.bio || '', // Assurez-vous que l'utilisateur a un champ bio dans le modèle
-          }
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Erreur lors de la récupération du profil:', error);
-      res.json({ result: false, error: 'Erreur lors de la récupération du profil' });
-    });
-});
-
-
-// Route qui gère la Connection
 router.post('/signin', (req, res) => {
 
   if (!checkBody(req.body, ["email", "password"])) {

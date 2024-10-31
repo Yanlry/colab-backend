@@ -5,6 +5,50 @@ const Activite = require('../models/activites')
 const User = require('../models/users')
 
 
+router.get('/activites', (req, res) => {
+    Activite.find().lean().select('activite')
+        .then(activites => {
+            const activiteValues = activites.map(activite => activite.activite);
+            const responseObject = { activites: activiteValues };
+            res.json(responseObject);
+        })
+});
+
+router.get('/activites/:token', (req, res) => {
+    User.findOne({ token: req.params.token })
+        .populate('teach')
+        .populate('learn')
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
+            }
+
+            const selectedTeachActivities = user.teach.map(activite => activite.activite);
+            const selectedLearnActivities = user.learn.map(activite => activite.activite);
+
+            res.status(200).json({
+                result: true,
+                teach: selectedTeachActivities,
+                learn: selectedLearnActivities
+            });
+        })
+        .catch(error => {
+            res.status(500).json({ result: false, error: error.message });
+        });
+});
+
+router.post('/bio', (req, res) => {
+    const token = req.body.token;
+    const contenuBio = req.body.bio;
+    User.findOneAndUpdate({ token: token }, { bio: contenuBio }, { new: true })
+        .then(data => {
+            if (!data) {
+                return res.json({ erreur: "Utilisateur introuvable" });
+            }
+            return res.json({ message: "Bio mis à jour avec succès", bio: data.bio });
+        })
+});
+
 router.post('/learn', (req, res) => {
     const token = req.body.token;
 
@@ -44,7 +88,6 @@ router.post('/learn', (req, res) => {
         });
 });
 
-
 router.post('/teach', (req, res) => {
     const token = req.body.token;
     User.findOne({ token })
@@ -76,6 +119,18 @@ router.post('/teach', (req, res) => {
                 })
         })
 
+});
+
+router.post('/newActivite', (req, res) => {
+    const { activite } = req.body;
+    if (!activite) {
+        return res.json({ result: false, error: 'Le champ activite est requis' });
+    }
+    const nouvelleActivite = new Activite({ activite });
+    nouvelleActivite.save()
+        .then(activiteEnregistree => {
+            res.json({ result: true, activite: activiteEnregistree});
+        })
 });
 
 router.put('/learn', (req, res) => {
@@ -118,7 +173,6 @@ router.put('/learn', (req, res) => {
         });
 });
 
-
 router.put('/teach', (req, res) => {
     const token = req.body.token;
 
@@ -158,40 +212,5 @@ router.put('/teach', (req, res) => {
             res.json({ result: false, error: error.message });
         });
 });
-
-
-router.post('/bio', (req, res) => {
-    const token = req.body.token;
-    const contenuBio = req.body.bio;
-    User.findOneAndUpdate({ token: token }, { bio: contenuBio }, { new: true })
-        .then(data => {
-            if (!data) {
-                return res.json({ erreur: "Utilisateur introuvable" });
-            }
-            return res.json({ message: "Bio mis à jour avec succès", bio: data.bio });
-        })
-});
-
-router.get('/activites', (req, res) => {
-    Activite.find().lean().select('activite')
-        .then(activites => {
-            const activiteValues = activites.map(activite => activite.activite);
-            const responseObject = { activites: activiteValues };
-            res.json(responseObject);
-        })
-});
-
-router.post('/newActivite', (req, res) => {
-    const { activite } = req.body;
-    if (!activite) {
-        return res.json({ result: false, error: 'Le champ activite est requis' });
-    }
-    const nouvelleActivite = new Activite({ activite });
-    nouvelleActivite.save()
-        .then(activiteEnregistree => {
-            res.json({ result: true, activite: activiteEnregistree});
-        })
-});
-
 
 module.exports = router;
