@@ -213,74 +213,19 @@ router.put('/teach', (req, res) => {
         });
 });
 
-// Route pour récupérer le profil de l'utilisateur via son username
-router.get('/user/profile/:username', (req, res) => {
-    const { username } = req.params;
-    console.log('Recherche de l\'utilisateur avec le nom:', username);
-
-    if (!username) {
-        return res.json({ result: false, error: 'Nom d’utilisateur non fourni' });
-    }
-
-    // Recherche de l'utilisateur par username
-    User.findOne({ username })
-        .then(user => {
-            if (!user) {
-                return res.json({ result: false, error: 'Utilisateur introuvable' });
-            }
-
-            // Rechercher une annonce spécifique associée à l'utilisateur, ici la plus récente
-            Annonce.find({ user: user._id }).sort({ date: -1 }).limit(1)
-                .then(annonces => {
-                    if (!annonces || annonces.length === 0) {
-                        return res.json({ result: false, error: 'Aucune annonce trouvée pour cet utilisateur' });
-                    }
-
-                    const annonce = annonces[0]; // Première annonce dans le tableau
-
-                    // Créer l'objet userData avec les détails de l'annonce trouvée
-                    const userData = {
-                        username: user.username,
-                        phone: user.phone,
-                        email: user.email,
-                        annonce: {
-                            title: annonce.title,
-                            description: annonce.description,
-                            date: annonce.date,
-                            type: annonce.type,
-                        },
-                    };
-
-                    res.json({ result: true, user: userData });
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la récupération de l\'annonce:', error);
-                    res.json({ result: false, error: 'Erreur lors de la récupération de l\'annonce' });
-                });
-        })
-        .catch(error => {
-            console.error('Erreur lors de la recherche de l\'utilisateur:', error);
-            res.json({ result: false, error: 'Erreur lors de la recherche de l\'utilisateur' });
-        });
-});
-
-
-
-
-// Route pour récupérer les informations d'un utilisateur spécifique via son username et ses annonces associées
 router.get('/users/:username', (req, res) => {
     const { username } = req.params;
 
-    // Recherche de l'utilisateur par username
     User.findOne({ username })
+        .populate('teach', 'activite')  // Utilisez .populate pour récupérer les noms des activités
+        .populate('learn', 'activite')
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur non trouvé' });
             }
 
-            // Utilisation de l'ID de l'utilisateur pour chercher les annonces associées
-            Annonce.find({ username: user._id }) 
-                .populate('secteurActivite', 'activite') // `username` ici fait référence à l'ID de l'utilisateur dans les annonces
+            Annonce.find({ username: user._id })
+                .populate('secteurActivite', 'activite')
                 .then(annonces => {
                     // Structuration des données utilisateur avec les annonces associées
                     const userData = {
@@ -288,15 +233,25 @@ router.get('/users/:username', (req, res) => {
                         email: user.email,
                         phone: user.phone,
                         token: user.token,
+                        bio: user.bio,
+                        teach: user.teach.map(activity => activity.activite), // Récupère les noms des activités pour teach
+                        learn: user.learn.map(activity => activity.activite), // Récupère les noms des activités pour learn
                         annonces: annonces.map(annonce => ({
+                            id: annonce._id,
+                            type: annonce.type,
                             title: annonce.title,
                             description: annonce.description,
-                            date: annonce.date,
-                            experience: annonce.experience,
+                            programme: annonce.programme,
+                            image: annonce.image,
+                            secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
+                            mode: annonce.mode,
                             disponibilite: annonce.disponibilite,
                             tempsMax: annonce.tempsMax,
-                            secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
-                            type: annonce.type,
+                            experience: annonce.experience,
+                            date: annonce.date,
+                            token: annonce.token,
+                            latitude: annonce.latitude,
+                            longitude: annonce.longitude
                         })),
                     };
 
@@ -318,3 +273,53 @@ router.get('/users/:username', (req, res) => {
   
 module.exports = router;
 
+// // Route pour récupérer le profil de l'utilisateur via son username
+// router.get('/user/profile/:username', (req, res) => {
+//     const { username } = req.params;
+//     console.log('Recherche de l\'utilisateur avec le nom:', username);
+
+//     if (!username) {
+//         return res.json({ result: false, error: 'Nom d’utilisateur non fourni' });
+//     }
+
+//     // Recherche de l'utilisateur par username
+//     User.findOne({ username })
+//         .then(user => {
+//             if (!user) {
+//                 return res.json({ result: false, error: 'Utilisateur introuvable' });
+//             }
+
+//             // Rechercher une annonce spécifique associée à l'utilisateur, ici la plus récente
+//             Annonce.find({ user: user._id }).sort({ date: -1 }).limit(1)
+//                 .then(annonces => {
+//                     if (!annonces || annonces.length === 0) {
+//                         return res.json({ result: false, error: 'Aucune annonce trouvée pour cet utilisateur' });
+//                     }
+
+//                     const annonce = annonces[0]; // Première annonce dans le tableau
+
+//                     // Créer l'objet userData avec les détails de l'annonce trouvée
+//                     const userData = {
+//                         username: user.username,
+//                         phone: user.phone,
+//                         email: user.email,
+//                         annonce: {
+//                             title: annonce.title,
+//                             description: annonce.description,
+//                             date: annonce.date,
+//                             type: annonce.type,
+//                         },
+//                     };
+
+//                     res.json({ result: true, user: userData });
+//                 })
+//                 .catch(error => {
+//                     console.error('Erreur lors de la récupération de l\'annonce:', error);
+//                     res.json({ result: false, error: 'Erreur lors de la récupération de l\'annonce' });
+//                 });
+//         })
+//         .catch(error => {
+//             console.error('Erreur lors de la recherche de l\'utilisateur:', error);
+//             res.json({ result: false, error: 'Erreur lors de la recherche de l\'utilisateur' });
+//         });
+// });

@@ -36,6 +36,7 @@ router.get('/enseigner/:token', (req, res) => {
                         programme:annonce.programme,
                         image: annonce.image,
                         secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
+                        mode: annonce.mode,
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
@@ -88,6 +89,7 @@ router.get('/apprendre/:token', (req, res) => {
                         programme: annonce.programme,
                         image: annonce.image,
                         secteurActivite: annonce.secteurActivite.map(activite => activite.activite),
+                        mode: annonce.mode,
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
@@ -152,7 +154,7 @@ router.post('/publier/:token', (req, res) => {
 
             return Promise.all(promises)
                 .then(() => {
-                    const { type, title, description, programme, tempsMax, experience, disponibilite, ville, latitude, longitude } = req.body;
+                    const { type, title, description, programme, tempsMax, experience, disponibilite, ville, latitude, longitude, mode} = req.body;
 
                     const newAnnonce = new Annonce({
                         username: user._id,
@@ -166,6 +168,7 @@ router.post('/publier/:token', (req, res) => {
                         experience: experience,
                         disponibilite: disponibilite, // Ce champ est maintenant un tableau
                         secteurActivite: newActiviteIds,
+                        mode:mode,
                         date: new Date(),
                         latitude: latitude, // Enregistrer la latitude
                         longitude: longitude // Enregistrer la longitude
@@ -186,7 +189,7 @@ router.post('/publier/:token', (req, res) => {
 });
 
 router.get('/annonces-localisation', (req, res) => {
-    Annonce.find({}, 'title description programme latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username')
+    Annonce.find({}, 'title description programme latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username mode')
         .populate('username', 'username') // Peuple le champ `username` pour récupérer uniquement `username`
         .populate('secteurActivite', 'activite') // Peuple `secteurActivite` pour récupérer `activite` dans chaque document de `activites`
         .then(annonces => {
@@ -201,6 +204,7 @@ router.get('/annonces-localisation', (req, res) => {
                 type: annonce.type,
                 date: annonce.date,
                 secteurActivite: annonce.secteurActivite.map(activity => activity.activite), // Utilise `activite` pour obtenir les noms des activités
+                mode: annonce.mode,
                 disponibilite: annonce.disponibilite,
                 tempsMax: annonce.tempsMax,
                 experience: annonce.experience,

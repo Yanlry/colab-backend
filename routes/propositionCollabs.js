@@ -11,39 +11,44 @@ router.post('/propositions', (req, res) => {
   const { token, cible, initiateur } = req.body;
 
   User.findOne({ username: cible })
-    .then(cible => {
-      if (!cible) {
-        return res.json({ result: false, error: 'Utilisateur cible non trouvé' });
-      }
-      User.findOne({ username: initiateur })
-        .then(initiateur => {
-          if (!initiateur) {
-            return res.json({ result: false, error: 'Utilisateur initiateur non trouvé' });
-          }
-          Annonce.findOne({ token })
-            .then(annonce => {
-              if (!annonce) {
-                return res.json({ result: false, error: 'Annonce non trouvée' });
-              }
-              PropositionCollab.findOne({ annonce: annonce._id, initiateur: initiateur._id })
-                .then(existingProposition => {
-                  if (existingProposition) {
-                    return res.json({ result: false, message: 'Vous avez déjà fait une demande de collaboration pour cette annonce.' });
-                  }
-                  const proposition = new PropositionCollab({
-                    annonce: annonce._id,
-                    cible: cible._id,
-                    initiateur: initiateur._id,
-                    statut: 'en_attente'
+  .then(cible => {
+    if (!cible) {
+      return res.json({ result: false, error: 'Utilisateur cible non trouvé' });
+    }
+    User.findOne({ username: initiateur })
+      .then(initiateur => {
+        if (!initiateur) {
+          return res.json({ result: false, error: 'Utilisateur initiateur non trouvé' });
+        }
+        Annonce.findOne({ token })
+          .then(annonce => {
+            if (!annonce) {
+              return res.json({ result: false, error: 'Annonce non trouvée' });
+            }
+            // Correction : utilise `initiateur` au lieu de `initiator`
+            const conversationId = `${annonce._id}_${initiateur._id}_${cible._id}`; 
+
+            PropositionCollab.findOne({ annonce: annonce._id, initiateur: initiateur._id })
+              .then(existingProposition => {
+                if (existingProposition) {
+                  return res.json({ result: false, message: 'Vous avez déjà fait une demande de collaboration pour cette annonce.' });
+                }
+                const proposition = new PropositionCollab({
+                  annonce: annonce._id,
+                  cible: cible._id,
+                  initiateur: initiateur._id,
+                  statut: 'en_attente',
+                  conversationId,
+                });
+                proposition.save()
+                  .then(savedProposition => {
+                    res.json({ result: true, message: 'La demande de collaboration a été envoyée avec succès.', proposition: savedProposition });
                   });
-                  proposition.save()
-                    .then(savedProposition => {
-                      res.json({ result: true, message: 'La demande de collaboration a été envoyée avec succès.', proposition: savedProposition });
-                    })
-                })
-            })
-        })
-    })
+              });
+          });
+      });
+  });
+
 });
 
 /// Route qui affiche les offres ainsi que l'état de la proposition de collaboration 
@@ -80,20 +85,20 @@ router.post('/propositions/cible', (req, res) => {
 
               if (proposition.statut === 'en_attente') {
                 additionalMessage = proposition.annonce 
-                  ? `, annonce en question: ${proposition.annonce.title}`
-                  : `, annonce en question: Vous avez supprimé l'annonce`;
+                  ? `${proposition.annonce.title}.`
+                  : `ANNONCE SUPPRIMÉ`;
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = ` a propos de l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a été ajouté à la liste de contacts,`;
+                additionalMessage = `${proposition.annonce ? proposition.annonce.title : 'L\'annonce a étais supprimé'}.`;
               } else if (proposition.statut === 'refusé') {
-                additionalMessage = `, annonce en question: ${proposition.annonce ? proposition.annonce.title : `, annonce en question: Vous avez supprimé l'annonce`}`;
+                additionalMessage = `${proposition.annonce ? proposition.annonce.title : `Vous avez supprimé l'annonce`}`;
               }
 
               if (proposition.statut === 'en_attente') {
-                message = `Vous avez reçu une offre de collaboration de: ${username}${additionalMessage}`;
+                message = `${username} aimerait entrer en contact avec vous pour : ${additionalMessage}`;
               } else if (proposition.statut === 'accepté') {
-                message = `Bravo, vous pouvez maintenant collaborer avec ${username}${additionalMessage}`;
+                message = `ACCEPTÉ ! ${username} vous attend dans l'onglet contact !`;
               } else if (proposition.statut === 'refusé') {
-                message = `Vous avez refusé la proposition de collaboration de: ${username}${additionalMessage}`;
+                message = `REFUSÉ ! ${username} a été averti de votre refus pour : ${additionalMessage}.`;
               }
             }
 
@@ -143,20 +148,20 @@ router.post('/propositions/initiateur/', (req, res) => {
 
               if (proposition.statut === 'en_attente') {
                 additionalMessage = proposition.annonce
-                  ? `, pour l'annonce: ${proposition.annonce.title}, le statut de la demande de collaboration est: ${proposition.statut}`
+                  ? ` ${proposition.annonce.title}.`
                   : `, annonce en question: Annonce supprimée`;
               } else if (proposition.statut === 'accepté') {
-                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a été ajouté à la liste de contacts.`;
+                additionalMessage = `${proposition.annonce ? proposition.annonce.title : 'Vous avez supprimé l\'annonce'}. Son numéro de téléphone a été ajouté à la liste de contacts.`;
               } else if (proposition.statut === 'refusé') {
-                additionalMessage = ` pour l'annonce: ${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}.`;
+                additionalMessage = `${proposition.annonce ? proposition.annonce.title : 'Une annonce qui n\'existe plus'}.`;
               }
 
               if (proposition.statut === 'en_attente') {
-                message = `Vous avez fait une demande de collaboration à: ${cibleUsername}${additionalMessage}`;
+                message = `${cibleUsername} analyse votre demande pour :${additionalMessage}`;
               } else if (proposition.statut === 'accepté') {
-                message = `${cibleUsername} a accepté votre proposition de collaboration${additionalMessage}`;
+                message = `ACCEPTÉ ! ${cibleUsername} vous attend dans l'onglet contact !`;
               } else if (proposition.statut === 'refusé') {
-                message = `${cibleUsername} a décliné votre proposition de collaboration${additionalMessage}`;
+                message = `REFUSÉ ! ${cibleUsername} a décliné votre proposition pour : ${additionalMessage}`;
               }
             }
 
