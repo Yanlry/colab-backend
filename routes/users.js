@@ -93,7 +93,6 @@ router.post('/signin', (req, res) => {
   })
 })
 
-// Route pour modifier le nom d'utilisateur, le téléphone et la bio
 router.put('/updateProfile', (req, res) => {
   const { token, username, phone, bio } = req.body;
 
@@ -146,6 +145,28 @@ router.put('/updateProfile', (req, res) => {
     .catch(error => {
       console.error(error);
       res.json({ result: false, error: "Erreur lors de la recherche de l'utilisateur" });
+    });
+});
+
+router.delete('/deleteProfile/:token', (req, res) => {
+  const { token } = req.params;
+
+  console.log(`Suppression du profil pour le token: ${token}`); // Log le token reçu
+
+  // Rechercher l'utilisateur par son token
+  User.findOneAndDelete({ token })
+    .then(user => {
+      if (!user) {
+        console.log('Utilisateur non trouvé'); // Log si l'utilisateur n'est pas trouvé
+        res.json({ result: false, error: 'Utilisateur non trouvé' });
+      } else {
+        console.log('Utilisateur supprimé:', user); // Log les informations de l'utilisateur supprimé
+        res.json({ result: true, message: 'Profil supprimé avec succès' });
+      }
+    })
+    .catch(error => {
+      console.error('Erreur lors de la suppression du profil:', error); // Log l'erreur si elle se produit
+      res.status(500).json({ result: false, error: 'Erreur lors de la suppression du profil' });
     });
 });
 

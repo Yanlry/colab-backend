@@ -246,6 +246,82 @@ router.delete('/supprime/:token', (req, res) => {
         })
 })
 
+router.put('/modifier/:token', (req, res) => {
+    const { token } = req.params;
+    const { annonceId, title, description, programme, tempsMax, experience, disponibilite, type, secteurActivite, mode, ville, latitude, longitude } = req.body;
+
+    // Recherche de l'utilisateur par token
+    User.findOne({ token })
+        .then(user => {
+            if (!user) {
+                return res.json({ result: false, error: 'Utilisateur introuvable' });
+            }
+
+            // Vérification de l'existence de l'annonce et que l'utilisateur est l'auteur
+            Annonce.findOne({ _id: annonceId, username: user._id })
+                .then(annonce => {
+                    if (!annonce) {
+                        return res.json({ result: false, error: 'Annonce introuvable ou non autorisée' });
+                    }
+
+                    // Mise à jour des champs de l'annonce
+                    annonce.type = type || annonce.type;
+                    annonce.title = title || annonce.title;
+                    annonce.description = description || annonce.description;
+                    annonce.programme = programme || annonce.programme;
+                    annonce.tempsMax = tempsMax || annonce.tempsMax;
+                    annonce.experience = experience || annonce.experience;
+                    annonce.disponibilite = disponibilite || annonce.disponibilite;
+                    annonce.mode = mode || annonce.mode;
+                    annonce.ville = ville || annonce.ville;
+                    annonce.latitude = latitude || annonce.latitude;
+                    annonce.longitude = longitude || annonce.longitude;
+
+                    // Mise à jour des secteurs d'activité si fournis
+                    if (secteurActivite && secteurActivite.length > 0) {
+                        const activiteIds = [];
+                        const promises = secteurActivite.map(activiteName =>
+                            Activite.findOne({ activite: activiteName }).then(activite => {
+                                if (activite) {
+                                    activiteIds.push(activite._id);
+                                }
+                            })
+                        );
+
+                        Promise.all(promises)
+                            .then(() => {
+                                annonce.secteurActivite = activiteIds;
+                                return annonce.save();
+                            })
+                            .then(updatedAnnonce => {
+                                res.json({ result: true, annonce: updatedAnnonce });
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors de la mise à jour de l\'annonce:', error.message);
+                                res.json({ result: false, error: error.message });
+                            });
+                    } else {
+                        // Sauvegarde de l'annonce si secteurActivite n'est pas fourni
+                        annonce.save()
+                            .then(updatedAnnonce => {
+                                res.json({ result: true, annonce: updatedAnnonce });
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors de la mise à jour de l\'annonce:', error.message);
+                                res.json({ result: false, error: error.message });
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la recherche de l\'annonce:', error.message);
+                    res.json({ result: false, error: error.message });
+                });
+        })
+        .catch(error => {
+            console.error('Erreur lors de la recherche de l\'utilisateur:', error.message);
+            res.json({ result: false, error: error.message });
+        });
+});
 
 module.exports = router;
 
