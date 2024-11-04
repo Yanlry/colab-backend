@@ -1,4 +1,3 @@
-// app.js
 require('dotenv').config();
 require('./models/connection');
 

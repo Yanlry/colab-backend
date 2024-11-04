@@ -11,7 +11,6 @@ const messageSchema = new mongoose.Schema({
   isRead: { type: Boolean, default: false }
 });
 
-// Ajouter un index sur 'conversationId' pour améliorer les performances
 messageSchema.index({ conversationId: 1 });
 
 const Message = mongoose.model('Message', messageSchema);

@@ -10,24 +10,21 @@ const uid2 = require('uid2');
 router.get('/enseigner/:token', (req, res) => {
     const { token } = req.params;
 
-    // Recherche de l'utilisateur par token
     User.findOne({ token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
-            // Recherche des annonces de type "Enseigner" qui ne sont pas de cet utilisateur et qui correspondent aux secteurs d'activité de l'utilisateur
             Annonce.find({
-                type: 'Apprendre', // Filtre sur les annonces de type "Enseigner"
-                username: { $ne: user._id }, // Exclure les annonces de l'utilisateur lui-même
-                secteurActivite: { $in: user.teach } // Filtrer par secteurs d'activité que l'utilisateur souhaite apprendre
+                type: 'Apprendre', 
+                username: { $ne: user._id }, 
+                secteurActivite: { $in: user.teach } 
             })
-                .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
-                .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
+                .populate({ path: 'secteurActivite', select: 'activite' }) 
+                .populate('username', 'username') 
                 .then(annonces => {
 
-                    // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
                         id: annonce._id,
                         type: annonce.type,
@@ -40,7 +37,7 @@ router.get('/enseigner/:token', (req, res) => {
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
-                        username: annonce.username?.username, // Utilise ?. pour éviter une erreur si username est null
+                        username: annonce.username?.username, 
                         date: annonce.date,
                         token: annonce.token,
                         latitude: annonce.latitude,
@@ -63,24 +60,21 @@ router.get('/enseigner/:token', (req, res) => {
 router.get('/apprendre/:token', (req, res) => {
     const { token } = req.params;
 
-    // Recherche de l'utilisateur par token
     User.findOne({ token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
-            // Recherche des annonces de type "Enseigner" qui ne sont pas de cet utilisateur et qui correspondent aux secteurs d'activité de l'utilisateur
             Annonce.find({
-                type: 'Enseigner', // Filtre sur les annonces de type "Enseigner"
-                username: { $ne: user._id }, // Exclure les annonces de l'utilisateur lui-même
-                secteurActivite: { $in: user.learn } // Filtrer par secteurs d'activité que l'utilisateur souhaite apprendre
+                type: 'Enseigner',
+                username: { $ne: user._id }, 
+                secteurActivite: { $in: user.learn } 
             })
-                .populate({ path: 'secteurActivite', select: 'activite' }) // Récupère les noms des activités
-                .populate('username', 'username') // Récupère le nom d'utilisateur de l'annonceur
+                .populate({ path: 'secteurActivite', select: 'activite' }) 
+                .populate('username', 'username') 
                 .then(annonces => {
 
-                    // Formate les annonces pour l'envoi au frontend
                     const formattedAnnonces = annonces.map(annonce => ({
                         id: annonce._id,
                         type: annonce.type,
@@ -93,7 +87,7 @@ router.get('/apprendre/:token', (req, res) => {
                         disponibilite: annonce.disponibilite,
                         tempsMax: annonce.tempsMax,
                         experience: annonce.experience,
-                        username: annonce.username?.username, // Utilise ?. pour éviter une erreur si username est null
+                        username: annonce.username?.username, 
                         date: annonce.date,
                         token: annonce.token,
                         latitude: annonce.latitude,
@@ -166,12 +160,12 @@ router.post('/publier/:token', (req, res) => {
                         programme: programme,
                         tempsMax: tempsMax,
                         experience: experience,
-                        disponibilite: disponibilite, // Ce champ est maintenant un tableau
+                        disponibilite: disponibilite, 
                         secteurActivite: newActiviteIds,
                         mode:mode,
                         date: new Date(),
-                        latitude: latitude, // Enregistrer la latitude
-                        longitude: longitude // Enregistrer la longitude
+                        latitude: latitude,
+                        longitude: longitude 
                     });
 
                     return newAnnonce.save()
@@ -190,8 +184,8 @@ router.post('/publier/:token', (req, res) => {
 
 router.get('/annonces-localisation', (req, res) => {
     Annonce.find({}, 'title description programme latitude longitude ville type date secteurActivite token disponibilite tempsMax experience username mode')
-        .populate('username', 'username') // Peuple le champ `username` pour récupérer uniquement `username`
-        .populate('secteurActivite', 'activite') // Peuple `secteurActivite` pour récupérer `activite` dans chaque document de `activites`
+        .populate('username', 'username') 
+        .populate('secteurActivite', 'activite')
         .then(annonces => {
             const formattedAnnonces = annonces.map(annonce => ({
                 token:annonce.token,
@@ -203,7 +197,7 @@ router.get('/annonces-localisation', (req, res) => {
                 ville: annonce.ville,
                 type: annonce.type,
                 date: annonce.date,
-                secteurActivite: annonce.secteurActivite.map(activity => activity.activite), // Utilise `activite` pour obtenir les noms des activités
+                secteurActivite: annonce.secteurActivite.map(activity => activity.activite), 
                 mode: annonce.mode,
                 disponibilite: annonce.disponibilite,
                 tempsMax: annonce.tempsMax,
@@ -250,21 +244,18 @@ router.put('/modifier/:token', (req, res) => {
     const { token } = req.params;
     const { annonceId, title, description, programme, tempsMax, experience, disponibilite, type, secteurActivite, mode, ville, latitude, longitude } = req.body;
 
-    // Recherche de l'utilisateur par token
     User.findOne({ token })
         .then(user => {
             if (!user) {
                 return res.json({ result: false, error: 'Utilisateur introuvable' });
             }
 
-            // Vérification de l'existence de l'annonce et que l'utilisateur est l'auteur
             Annonce.findOne({ _id: annonceId, username: user._id })
                 .then(annonce => {
                     if (!annonce) {
                         return res.json({ result: false, error: 'Annonce introuvable ou non autorisée' });
                     }
 
-                    // Mise à jour des champs de l'annonce
                     annonce.type = type || annonce.type;
                     annonce.title = title || annonce.title;
                     annonce.description = description || annonce.description;
@@ -277,7 +268,6 @@ router.put('/modifier/:token', (req, res) => {
                     annonce.latitude = latitude || annonce.latitude;
                     annonce.longitude = longitude || annonce.longitude;
 
-                    // Mise à jour des secteurs d'activité si fournis
                     if (secteurActivite && secteurActivite.length > 0) {
                         const activiteIds = [];
                         const promises = secteurActivite.map(activiteName =>
@@ -301,7 +291,7 @@ router.put('/modifier/:token', (req, res) => {
                                 res.json({ result: false, error: error.message });
                             });
                     } else {
-                        // Sauvegarde de l'annonce si secteurActivite n'est pas fourni
+                       
                         annonce.save()
                             .then(updatedAnnonce => {
                                 res.json({ result: true, annonce: updatedAnnonce });

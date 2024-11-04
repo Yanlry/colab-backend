@@ -2,7 +2,6 @@ const express = require('express');
 var router = express.Router();
 
 const Message = require('../models/messages'); 
-const User = require('../models/users'); 
 
 router.get('/:destinataireToken/:senderToken', (req, res) => {
   const { destinataireToken, senderToken } = req.params;
@@ -20,7 +19,7 @@ router.get('/:destinataireToken/:senderToken', (req, res) => {
     .then(messages => {
       const messagesWithFlag = messages.map(message => ({
         ...message._doc,
-        isNew: !message.isRead, // Ajoute isNew si le message n'est pas lu
+        isNew: !message.isRead, 
       }));
       res.json({ result: true, messages: messagesWithFlag });
     })
@@ -33,13 +32,12 @@ router.get('/:destinataireToken/:senderToken', (req, res) => {
 router.get('/conversations/unread/:token', (req, res) => {
   const { token } = req.params;
 
-  // Recherche des messages non lus où l'utilisateur est le destinataire
   Message.find({
-    recipientToken: token,       // L'utilisateur est le destinataire
-    isRead: false                // Messages non lus uniquement
+    recipientToken: token,       
+    isRead: false               
   })
   .then(messages => {
-    // Filtrer pour obtenir les `conversationId` uniques avec des messages non lus
+    
     const conversationIds = [...new Set(messages.map(message => message.conversationId))];
 
     if (conversationIds.length > 0) {
@@ -55,13 +53,11 @@ router.get('/conversations/unread/:token', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { senderToken, recipientToken, text } = req.body;
 
-  // Crée un `conversationId` unique en triant les tokens alphabétiquement
+  const { senderToken, recipientToken, text } = req.body;
   const sortedTokens = [senderToken, recipientToken].sort();
   const conversationId = sortedTokens.join('');
 
-  // Créer le nouveau message
   const newMessage = new Message({
     text,
     senderToken,
@@ -69,10 +65,9 @@ router.post('/', (req, res) => {
     conversationId,
     participants: [senderToken, recipientToken],
     lastMessage: text,
-    isRead: false, // Le message est marqué comme non lu par défaut
+    isRead: false, 
   });
 
-  // Enregistrer le message
   newMessage.save()
     .then(savedMessage => {
       res.status(201).json({ success: true, message: 'Message enregistré avec succès.', savedMessage });
